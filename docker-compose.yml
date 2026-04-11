@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  zprint:
+    build: .
+    container_name: zprint
+    ports:
+      - "8060:8060"
+    volumes:
+      - ./.env:/app/.env
+      - ./printer_config.json:/app/printer_config.json
+    restart: unless-stopped

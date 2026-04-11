@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ZPrint | Web</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: rgba(30, 41, 59, 0.7);
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #10b981;
+    --danger: #ef4444;
+    --glass-blur: blur(12px);
+    --font: 'Inter', sans-serif;
+  }
+  
+  [data-theme="light"] {
+    --bg: #f1f5f9;
+    --surface: rgba(255, 255, 255, 0.8);
+    --border: rgba(0, 0, 0, 0.1);
+    --text: #0f172a;
+    --text-muted: #64748b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { 
+    font-family: var(--font); 
+    background-color: var(--bg); 
+    color: var(--text); 
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+    transition: all 0.3s ease;
+    background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 20%),
+                      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Header & Status */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    padding: 16px 24px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  }
+
+  h1 { font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+  h1 span { color: var(--primary); }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.875rem; font-weight: 500;
+    padding: 6px 12px; border-radius: 20px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  }
+  .status-badge.ok { color: var(--success); }
+  .status-badge.error { color: var(--danger); }
+  .status-indicator { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  .controls-right { display: flex; gap: 12px; align-items: center; }
+  .icon-btn {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; width: 40px; height: 40px; cursor: pointer;
+    display: flex; justify-content: center; align-items: center;
+    transition: 0.2s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.1); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  }
+
+  .card-title {
+    font-size: 1.125rem; font-weight: 600; margin-bottom: 20px;
+    color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; color: var(--text-muted); }
+  
+  input {
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.95rem;
+    transition: 0.2s;
+  }
+  [data-theme="light"] input { background: rgba(255,255,255,0.5); }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px; font-weight: 500; cursor: pointer; border: none;
+    font-family: var(--font); font-size: 0.95rem;
+    transition: all 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+  
+  .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+  [data-theme="light"] .btn-secondary { background: #e2e8f0; color: #1e293b; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;}
+  .tab { 
+    background: transparent; color: var(--text-muted); border: none; font-size: 0.95rem; 
+    font-weight: 500; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: 0.2s; 
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .tab.active { background: var(--primary); color: #fff; }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Odoo Results */
+  .results {
+    margin-top: 16px; border: 1px solid var(--border); border-radius: 8px;
+    max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.1);
+  }
+  .result-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.2s; }
+  .result-item:last-child { border-bottom: none; }
+  .result-item:hover { background: rgba(59, 130, 246, 0.1); }
+  
+  .selected-banner {
+    margin-top: 16px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--success); font-weight: 500; display: none; align-items: center; gap: 8px;
+  }
+
+  /* Print Action */
+  .print-card { text-align: center; background: linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); }
+  [data-theme="light"] .print-card { background: linear-gradient(145deg, #ffffff, #f8fafc); }
+  .btn-massive { width: 100%; padding: 16px; font-size: 1.25rem; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none; transition: 0.3s; z-index: 100;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+    width: 100%; max-width: 500px; padding: 24px;
+    transform: translateY(20px); transition: 0.3s;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
+  .close-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;}
+  
+  /* Log */
+  #log {
+    margin-top: 16px; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.85rem;
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border); max-height: 100px; overflow-y: auto;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Header -->
+  <header>
+    <h1>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+      <span>Z</span>Print
+    </h1>
+    <div class="controls-right">
+      <div id="status" class="status-badge">
+        <div class="status-indicator"></div> Comprobando API...
+      </div>
+      <button class="icon-btn" onclick="toggleTheme()" title="Cambiar Tema">Theme</button>
+      <button class="icon-btn" onclick="openSettings()" title="Ajustes de Impresora">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Product Selection -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('odoo')">Buscar en Odoo</button>
+      <button class="tab" onclick="switchTab('manual')">Entrada Manual</button>
+    </div>
+
+    <!-- Odoo Tab -->
+    <div id="tab-odoo" class="tab-content active">
+      <div class="grid-2" style="grid-template-columns: 1fr auto auto;">
+        <input id="q" type="text" placeholder="Ej: 77-521 o percha" onkeypress="handleEnter(event, doSearch)"/>
+        <button class="btn btn-primary" onclick="doSearch()">Buscar</button>
+        <button class="btn btn-secondary" onclick="clearResults()">Limpiar</button>
+      </div>
+      <div id="results" class="results" style="display:none;"></div>
+    </div>
+
+    <!-- Manual Tab -->
+    <div id="tab-manual" class="tab-content">
+      <div class="grid-2">
+        <div>
+          <label>ID del Producto</label>
+          <input id="m_id" type="text" placeholder="Ej: 99-999" oninput="updateManualSelected()" onkeypress="handleEnter(event, tryPrint)"/>
+        </div>
+        <div>
+          <label>Nombre del Producto</label>
+          <input id="m_name" type="text" placeholder="Ej: Válvula especial" oninput="updateManualSelected()" onkeypress="handleEnter(event, tryPrint)"/>
+        </div>
+      </div>
+    </div>
+
+    <div id="selected-banner" class="selected-banner">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <span id="selected-text"></span>
+    </div>
+  </div>
+
+  <!-- Label Data -->
+  <div class="card">
+    <div class="card-title">Datos de la Etiqueta</div>
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div>
+        <label>OP (Orden de Producción)</label>
+        <input id="op" type="text" placeholder="OP..." onkeypress="handleEnter(event, tryPrint)"/>
+      </div>
+      <div>
+        <label>Versión SGC</label>
+        <input id="sgc" type="text" placeholder="V1.0" onkeypress="handleEnter(event, tryPrint)"/>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div>
+        <label>Cantidad a Enviar</label>
+        <input id="qty" type="number" min="1" max="1000" value="1" onkeypress="handleEnter(event, tryPrint)"/>
+      </div>
+      <div>
+        <label>Total Lote</label>
+        <input id="total" type="number" min="1" max="10000" value="1" onkeypress="handleEnter(event, tryPrint)"/>
+      </div>
+      <div>
+        <label>Número Inicio</label>
+        <input id="start" type="number" min="1" max="10000" value="1" onkeypress="handleEnter(event, tryPrint)"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Big Print Button -->
+  <div class="card print-card">
+    <button class="btn btn-primary btn-massive" onclick="doPrint()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      IMPRIMIR ETIQUETA
+    </button>
+    <div id="log"></div>
+  </div>
+
+</div>
+
+<!-- Printer Settings Modal -->
+<div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="card-title" style="margin:0;">Ajustes de Impresora</h2>
+      <button class="close-btn" onclick="openSettings()">&times;</button>
+    </div>
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div>
+        <label>IP de la Impresora</label>
+        <input id="p_ip" type="text" placeholder="10.10.2.46"/>
+      </div>
+      <div>
+        <label>Puerto</label>
+        <input id="p_port" type="number" min="1" max="65535" value="6101"/>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <div>
+        <label>Ajuste Vertical (dots)</label>
+        <input id="p_voff" type="number" min="-500" max="500" value="0"/>
+      </div>
+      <div>
+        <label>Ajuste Horizontal (dots)</label>
+        <input id="p_hoff" type="number" min="-500" max="500" value="0"/>
+      </div>
+    </div>
+    <div class="grid-2">
+      <button class="btn btn-secondary" onclick="loadPrinterCfg()">Restaurar</button>
+      <button class="btn btn-primary" onclick="savePrinterCfg()">Guardar Cambios</button>
+    </div>
+    <div id="pcfg_msg" style="margin-top:12px; font-size:0.85rem; color:var(--success); text-align:center;"></div>
+  </div>
+</div>
+
+<script>
+let selected = null;
+let currentTab = 'odoo';
+
+// Initialization
+async function init() {
+  await checkStatus();
+  await loadPrinterCfg();
+}
+
+// Enter Key Handler
+function handleEnter(e, callback) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    callback();
+  }
+}
+
+// Print trigger from inputs
+function tryPrint() {
+  doPrint();
+}
+
+// Theme Management
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+}
+
+// Tabs Logic
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  
+  if(tab === 'odoo') clearResults();
+  if(tab === 'manual') updateManualSelected();
+}
+
+// Status check (Odoo API health)
+async function checkStatus() {
+  try {
+    const r = await fetch('/api/health');
+    const j = await r.json();
+    const s = document.getElementById('status');
+    if(j.odoo_ok) {
+      s.className = 'status-badge ok';
+      s.innerHTML = '<div class="status-indicator"></div> API Odoo OK';
+    } else {
+      s.className = 'status-badge error';
+      s.innerHTML = '<div class="status-indicator"></div> Falló Odoo';
+    }
+  } catch(e) {
+    const s = document.getElementById('status');
+    s.className = 'status-badge error';
+    s.innerHTML = '<div class="status-indicator"></div> Backend Desconectado';
+  }
+}
+
+// Search Logic
+function clearResults(){
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('results').style.display = 'none';
+  hideSelected();
+  selected = null;
+  document.getElementById('q').value = '';
+}
+
+function showSelected(id, name) {
+  const banner = document.getElementById('selected-banner');
+  banner.style.display = 'flex';
+  document.getElementById('selected-text').innerHTML = `Seleccionado: <strong>${id}</strong> — ${name}`;
+}
+
+function hideSelected() {
+  document.getElementById('selected-banner').style.display = 'none';
+}
+
+function updateManualSelected() {
+  const mid = document.getElementById('m_id').value.trim();
+  const mname = document.getElementById('m_name').value.trim();
+  if(mid || mname) {
+    selected = { id_producto: mid || 'N/A', nombre: mname || 'Sin Nombre' };
+    showSelected(selected.id_producto, selected.nombre);
+  } else {
+    selected = null;
+    hideSelected();
+  }
+}
+
+async function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  if(!q) return;
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q })
+    });
+    if(!res.ok) throw new Error('Error buscando');
+    
+    const data = await res.json();
+    const cont = document.getElementById('results');
+    cont.innerHTML = '';
+    cont.style.display = 'block';
+    
+    if(data.results.length === 0){
+      cont.innerHTML = '<div class="result-item" style="color:var(--text-muted);">Sin resultados</div>';
+      return;
+    }
+
+    data.results.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'result-item';
+      div.textContent = `${p.id_producto} — ${p.nombre}`;
+      div.onclick = () => {
+        selected = p;
+        showSelected(p.id_producto, p.nombre);
+        cont.style.display = 'none'; // hide list after selection
+      };
+      cont.appendChild(div);
+    });
+  } catch(e) {
+    alert('Error buscando productos: Asegúrate de que el backend esté activo.');
+  }
+}
+
+// Printer Settings Modal
+function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+function closeSettings(e) { 
+  if(e.target === e.currentTarget || e.target.classList.contains('close-btn')) {
+    document.getElementById('settings-modal').classList.remove('active');
+  }
+}
+
+async function loadPrinterCfg(){
+  try {
+    const r = await fetch('/api/printer-config');
+    const j = await r.json();
+    document.getElementById('p_ip').value = j.printer_ip || '10.10.2.46';
+    document.getElementById('p_port').value = j.printer_port || 6101;
+    document.getElementById('p_voff').value = j.vertical_offset_dots || 0;
+    document.getElementById('p_hoff').value = j.horizontal_offset_dots || 0;
+    document.getElementById('pcfg_msg').textContent = 'Configuración cargada.';
+    setTimeout(() => document.getElementById('pcfg_msg').textContent = '', 2000);
+  } catch(e) {
+    // defaults if fail
+  }
+}
+
+async function savePrinterCfg(){
+  const payload = {
+    printer_ip: document.getElementById('p_ip').value.trim(),
+    printer_port: Number(document.getElementById('p_port').value),
+    vertical_offset_dots: Number(document.getElementById('p_voff').value),
+    horizontal_offset_dots: Number(document.getElementById('p_hoff').value)
+  };
+  try {
+    const r = await fetch('/api/printer-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    document.getElementById('pcfg_msg').textContent = j.message || 'Apuntes guardados.';
+    setTimeout(() => {
+        document.getElementById('pcfg_msg').textContent = '';
+        document.getElementById('settings-modal').classList.remove('active');
+    }, 1500);
+  } catch(e) {
+    document.getElementById('pcfg_msg').textContent = 'Error al guardar.';
+  }
+}
+
+// Print Handler
+function logMessage(msg, isError = false) {
+  const log = document.getElementById('log');
+  log.style.display = 'block';
+  log.style.color = isError ? 'var(--danger)' : 'var(--success)';
+  log.innerHTML = `> ${msg}`;
+}
+
+async function doPrint(){
+  if(!selected){
+    alert('Por favor, selecciona o ingresa un producto primero.');
+    return;
+  }
+  const payload = {
+    producto: selected,
+    op: document.getElementById('op').value.trim(),
+    versionsgc: document.getElementById('sgc').value.trim(),
+    cantidad: Number(document.getElementById('qty').value),
+    totallote: Number(document.getElementById('total').value),
+    numinicio: Number(document.getElementById('start').value),
+    printer_ip: document.getElementById('p_ip').value.trim(),
+    printer_port: Number(document.getElementById('p_port').value),
+    vertical_offset_dots: Number(document.getElementById('p_voff').value),
+    horizontal_offset_dots: Number(document.getElementById('p_hoff').value)
+  };
+  
+  logMessage('Enviando a la impresora...', false);
+  try {
+    const res = await fetch('/api/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await res.json();
+    if(res.ok){
+      logMessage(`¡Éxito! ${j.message || 'Impresión enviada correctamente.'}`);
+    } else {
+      logMessage(`Error: ${j.detail || JSON.stringify(j)}`, true);
+    }
+  } catch(e) {
+    logMessage('Error de red al intentar mandar la impresión.', true);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -97,7 +97,7 @@ def get_printer_config():
         with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
     return {
-        "printer_ip": "10.10.2.46", "printer_port": 6101,
+        "printer_ip": "10.10.2.20", "printer_port": 9100,
         "vertical_offset_dots": 0, "horizontal_offset_dots": 0
     }
 

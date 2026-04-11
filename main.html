@@ -301,11 +301,11 @@
     <div class="grid-2" style="margin-bottom: 16px;">
       <div>
         <label>IP de la Impresora</label>
-        <input id="p_ip" type="text" placeholder="10.10.2.46"/>
+        <input id="p_ip" type="text" placeholder="10.10.2.20"/>
       </div>
       <div>
         <label>Puerto</label>
-        <input id="p_port" type="number" min="1" max="65535" value="6101"/>
+        <input id="p_port" type="number" min="1" max="65535" value="9100"/>
       </div>
     </div>
     <div class="grid-2" style="margin-bottom: 24px;">
@@ -469,8 +469,8 @@ async function loadPrinterCfg(){
   try {
     const r = await fetch('/api/printer-config');
     const j = await r.json();
-    document.getElementById('p_ip').value = j.printer_ip || '10.10.2.46';
-    document.getElementById('p_port').value = j.printer_port || 6101;
+    document.getElementById('p_ip').value = j.printer_ip || '10.10.2.20';
+    document.getElementById('p_port').value = j.printer_port || 9100;
     document.getElementById('p_voff').value = j.vertical_offset_dots || 0;
     document.getElementById('p_hoff').value = j.horizontal_offset_dots || 0;
     document.getElementById('pcfg_msg').textContent = 'Configuración cargada.';

@@ -89,7 +89,7 @@ def api_search(req: SearchReq):
     results = client.search_products(req.query)
     return {"results": results}
 
-CONFIG_FILE = "printer_config.json"
+CONFIG_FILE = "data/printer_config.json"
 
 @app.get("/api/printer-config")
 def get_printer_config():
@@ -103,6 +103,7 @@ def get_printer_config():
 
 @app.post("/api/printer-config")
 def set_printer_config(cfg: PrinterCfg):
+    os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
     with open(CONFIG_FILE, 'w') as f:
         json.dump(cfg.dict(), f)
     return {"message": "Configuración guardada exitosamente"}

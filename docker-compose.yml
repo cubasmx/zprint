@@ -8,5 +8,5 @@ services:
       - "8070:8060"
     volumes:
       - ./.env:/app/.env
-      - ./printer_config.json:/app/printer_config.json
+      - ./data:/app/data
     restart: unless-stopped

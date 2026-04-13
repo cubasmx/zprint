@@ -28,6 +28,26 @@
     --text-muted: #64748b;
   }
 
+  [data-theme="truck"] {
+    --bg: #1a1a1a;
+    --surface: rgba(40, 40, 40, 0.9);
+    --border: rgba(230, 0, 0, 0.3);
+    --text: #fdfdfd;
+    --text-muted: #9ca3af;
+    --primary: #e60000;
+    --primary-hover: #b30000;
+  }
+
+  [data-theme="papiro"] {
+    --bg: #f4e8d3;
+    --surface: rgba(253, 245, 230, 0.7);
+    --border: rgba(139, 69, 19, 0.2);
+    --text: #4a3623;
+    --text-muted: #8b6b4a;
+    --primary: #8b4513;
+    --primary-hover: #5c2e0b;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body { 
@@ -118,7 +138,9 @@
     transition: 0.2s;
   }
   [data-theme="light"] input { background: rgba(255,255,255,0.5); }
-  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+  [data-theme="truck"] input { background: rgba(0,0,0,0.5); }
+  [data-theme="papiro"] input { background: rgba(255,255,255,0.4); }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--border); }
 
   .btn {
     padding: 10px 20px;
@@ -132,6 +154,9 @@
   .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--border); }
   .btn-secondary:hover { background: rgba(255,255,255,0.15); }
   [data-theme="light"] .btn-secondary { background: #e2e8f0; color: #1e293b; }
+  [data-theme="papiro"] .btn-secondary { background: rgba(139,69,19,0.1); color: #4a3623; border: 1px solid rgba(139,69,19,0.3); }
+  [data-theme="papiro"] .btn-secondary:hover { background: rgba(139,69,19,0.15); }
+  [data-theme="truck"] .btn-secondary { background: rgba(255,255,255,0.05); }
 
   /* Tabs */
   .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;}
@@ -165,6 +190,8 @@
   /* Print Action */
   .print-card { text-align: center; background: linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); }
   [data-theme="light"] .print-card { background: linear-gradient(145deg, #ffffff, #f8fafc); }
+  [data-theme="truck"] .print-card { background: linear-gradient(145deg, #111111, #222222); border-color: var(--primary); }
+  [data-theme="papiro"] .print-card { background: linear-gradient(145deg, #faebd7, #fdf5e6); }
   .btn-massive { width: 100%; padding: 16px; font-size: 1.25rem; }
 
   /* Modal */
@@ -352,8 +379,10 @@ function tryPrint() {
 // Theme Management
 function toggleTheme() {
   const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  const current = html.getAttribute('data-theme') || 'dark';
+  const themes = ['dark', 'light', 'truck', 'papiro'];
+  let next = themes[(themes.indexOf(current) + 1) % themes.length];
+  html.setAttribute('data-theme', next);
 }
 
 // Tabs Logic

@@ -137,7 +137,7 @@ def api_print(req: PrintReq):
                 zpl_label = f"""^XA
 ^LH{h_offset},{v_offset}
 ^FO55,15^A0N,20,20^FD{nombre_print}^FS
-^FO55,40^BCN,75,Y,N,N^FD{id_producto}^FS
+^FO100,40^BCN,75,Y,N,N^FD{id_producto}^FS
 ^FO55,148^A0N,22,22^FD{op_print}^FS
 ^FO260,148^A0N,20,20^FD{current_date_str}^FS
 ^FO55,168^A0N,20,20^FD{actual_num}/{totallote}^FS

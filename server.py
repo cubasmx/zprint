@@ -1,6 +1,7 @@
 import os
 import json
 import socket
+import csv
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
@@ -91,6 +92,7 @@ def api_search(req: SearchReq):
     return {"results": results}
 
 CONFIG_FILE = "data/printer_config.json"
+HISTORY_FILE = "data/history.csv"
 
 @app.get("/api/printer-config")
 def get_printer_config():
@@ -108,6 +110,27 @@ def set_printer_config(cfg: PrinterCfg):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(cfg.dict(), f)
     return {"message": "Configuración guardada exitosamente"}
+
+@app.get("/api/history")
+def get_history():
+    if not os.path.exists(HISTORY_FILE):
+        return {"history": []}
+    history = []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                history.append(row)
+        # Devolver sólo los últimos 100 registros para UI
+        return {"history": history[::-1][:100]}
+    except Exception as e:
+        return {"history": []}
+
+@app.get("/api/history/export")
+def export_history():
+    if not os.path.exists(HISTORY_FILE):
+        raise HTTPException(status_code=404, detail="No hay historial para exportar")
+    return FileResponse(HISTORY_FILE, media_type="text/csv", filename="historial_zprint.csv")
 
 @app.post("/api/print")
 def api_print(req: PrintReq):
@@ -128,6 +151,7 @@ def api_print(req: PrintReq):
         totallote = req.totallote
         numinicio = req.numinicio
         current_date_str = datetime.now().strftime("%d/%m/%Y")
+        current_date_str_exact = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(5.0)
@@ -144,6 +168,18 @@ def api_print(req: PrintReq):
 ^FO260,168^A0N,20,20^FD{sgc_print}^FS
 ^PQ1,1,1,Y^XZ"""
                 sock.sendall(zpl_label.encode('latin1'))
+
+        # Save history
+        try:
+            os.makedirs("data", exist_ok=True)
+            file_exists = os.path.exists(HISTORY_FILE)
+            with open(HISTORY_FILE, "a", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Fecha y Hora", "ID Producto", "Nombre", "OP", "Versión SGC", "Cantidad", "Total Lote", "Inicio"])
+                writer.writerow([current_date_str_exact, id_producto, nombre, op_desc, sgc_version, qty, totallote, numinicio])
+        except Exception as e:
+            print("No se pudo guardar el historial:", e)
 
         # removed dead mysql history connection
         return {"message": f"{qty} etiquetas enviadas a {req.printer_ip}"}

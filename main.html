@@ -38,6 +38,16 @@
     --primary-hover: #b30000;
   }
 
+  [data-theme="ensa-verde"] {
+    --bg: #1a1a1a;
+    --surface: rgba(40, 40, 40, 0.9);
+    --border: rgba(16, 185, 129, 0.3);
+    --text: #fdfdfd;
+    --text-muted: #9ca3af;
+    --primary: #10b981;
+    --primary-hover: #059669;
+  }
+
   [data-theme="papiro"] {
     --bg: #f4e8d3;
     --surface: rgba(253, 245, 230, 0.7);
@@ -139,6 +149,7 @@
   }
   [data-theme="light"] input { background: rgba(255,255,255,0.5); }
   [data-theme="truck"] input { background: rgba(0,0,0,0.5); }
+  [data-theme="ensa-verde"] input { background: rgba(0,0,0,0.5); }
   [data-theme="papiro"] input { background: rgba(255,255,255,0.4); }
   input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--border); }
 
@@ -157,6 +168,7 @@
   [data-theme="papiro"] .btn-secondary { background: rgba(139,69,19,0.1); color: #4a3623; border: 1px solid rgba(139,69,19,0.3); }
   [data-theme="papiro"] .btn-secondary:hover { background: rgba(139,69,19,0.15); }
   [data-theme="truck"] .btn-secondary { background: rgba(255,255,255,0.05); }
+  [data-theme="ensa-verde"] .btn-secondary { background: rgba(255,255,255,0.05); }
 
   /* Tabs */
   .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;}
@@ -191,6 +203,7 @@
   .print-card { text-align: center; background: linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); }
   [data-theme="light"] .print-card { background: linear-gradient(145deg, #ffffff, #f8fafc); }
   [data-theme="truck"] .print-card { background: linear-gradient(145deg, #111111, #222222); border-color: var(--primary); }
+  [data-theme="ensa-verde"] .print-card { background: linear-gradient(145deg, #111111, #222222); border-color: var(--primary); }
   [data-theme="papiro"] .print-card { background: linear-gradient(145deg, #faebd7, #fdf5e6); }
   .btn-massive { width: 100%; padding: 16px; font-size: 1.25rem; }
 
@@ -246,6 +259,33 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('odoo')">Buscar en Odoo</button>
       <button class="tab" onclick="switchTab('manual')">Entrada Manual</button>
+      <button class="tab" onclick="switchTab('history')">Historial</button>
+    </div>
+
+    <!-- History Tab -->
+    <div id="tab-history" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1rem; color: var(--text);">Últimas 100 impresiones</h3>
+        <button class="btn btn-secondary" onclick="window.location.href='/api/history/export'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+        </button>
+      </div>
+      <div style="overflow-x: auto; max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.1);">
+        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+          <thead style="background: var(--surface); position: sticky; top: 0;">
+            <tr style="border-bottom: 1px solid var(--border); color: var(--text-muted);">
+              <th style="padding: 10px;">Fecha</th>
+              <th style="padding: 10px;">Producto</th>
+              <th style="padding: 10px;">OP</th>
+              <th style="padding: 10px;">Cant.</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <tr><td colspan="4" style="text-align:center; padding:12px; color:var(--text-muted);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Odoo Tab -->
@@ -380,7 +420,7 @@ function tryPrint() {
 function toggleTheme() {
   const html = document.documentElement;
   const current = html.getAttribute('data-theme') || 'dark';
-  const themes = ['dark', 'light', 'truck', 'papiro'];
+  const themes = ['dark', 'light', 'truck', 'ensa-verde', 'papiro'];
   let next = themes[(themes.indexOf(current) + 1) % themes.length];
   html.setAttribute('data-theme', next);
 }
@@ -396,6 +436,31 @@ function switchTab(tab) {
   
   if(tab === 'odoo') clearResults();
   if(tab === 'manual') updateManualSelected();
+  if(tab === 'history') loadHistory();
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/history');
+    const data = await res.json();
+    const tbody = document.getElementById('history-body');
+    tbody.innerHTML = '';
+    if (data.history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:12px; color:var(--text-muted);">Sin historial de impresión</td></tr>';
+        return;
+    }
+    data.history.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--border)';
+      tr.innerHTML = `
+        <td style="padding: 10px; white-space: nowrap;">${row['Fecha y Hora'] || ''}</td>
+        <td style="padding: 10px;"><b>${row['ID Producto']}</b> - ${row['Nombre']}</td>
+        <td style="padding: 10px;">${row['OP']}</td>
+        <td style="padding: 10px; font-weight: bold;">${row['Cantidad']}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch(e) { console.error('Error loading history', e); }
 }
 
 // Status check (Odoo API health)
@@ -569,6 +634,7 @@ async function doPrint(){
     const j = await res.json();
     if(res.ok){
       logMessage(`¡Éxito! ${j.message || 'Impresión enviada correctamente.'}`);
+      if(currentTab === 'history') loadHistory();
     } else {
       logMessage(`Error: ${j.detail || JSON.stringify(j)}`, true);
     }

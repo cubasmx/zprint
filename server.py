@@ -2,6 +2,7 @@ import os
 import json
 import socket
 import csv
+import pymysql
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
@@ -169,7 +170,6 @@ def api_print(req: PrintReq):
 ^PQ1,1,1,Y^XZ"""
                 sock.sendall(zpl_label.encode('latin1'))
 
-        # Save history
         try:
             os.makedirs("data", exist_ok=True)
             file_exists = os.path.exists(HISTORY_FILE)
@@ -179,7 +179,46 @@ def api_print(req: PrintReq):
                     writer.writerow(["Fecha y Hora", "ID Producto", "Nombre", "OP", "Versión SGC", "Cantidad", "Total Lote", "Inicio"])
                 writer.writerow([current_date_str_exact, id_producto, nombre, op_desc, sgc_version, qty, totallote, numinicio])
         except Exception as e:
-            print("No se pudo guardar el historial:", e)
+            print("No se pudo guardar el CSV:", e)
+
+        # MySQL Backup
+        mysql_host = os.getenv("MYSQL_HOST")
+        mysql_user = os.getenv("MYSQL_USER")
+        mysql_pwd = os.getenv("MYSQL_PASSWORD")
+        mysql_db = os.getenv("MYSQL_DB", "zprint")
+        mysql_port = int(os.getenv("MYSQL_PORT", "3306"))
+
+        if mysql_host and mysql_user:
+            try:
+                conn = pymysql.connect(
+                    host=mysql_host, port=mysql_port,
+                    user=mysql_user, password=mysql_pwd,
+                    autocommit=True
+                )
+                with conn.cursor() as cursor:
+                    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {mysql_db}")
+                    cursor.execute(f"USE {mysql_db}")
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS impresiones (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            fecha_hora DATETIME,
+                            id_producto VARCHAR(100),
+                            nombre VARCHAR(255),
+                            op VARCHAR(100),
+                            version_sgc VARCHAR(100),
+                            cantidad INT,
+                            total_lote INT,
+                            inicio INT
+                        )
+                    """)
+                    cursor.execute("""
+                        INSERT INTO impresiones 
+                        (fecha_hora, id_producto, nombre, op, version_sgc, cantidad, total_lote, inicio)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (current_date_str_exact, id_producto, nombre, op_desc, sgc_version, qty, totallote, numinicio))
+                conn.close()
+            except Exception as e:
+                print("No se pudo guardar el backup en MySQL:", e)
 
         # removed dead mysql history connection
         return {"message": f"{qty} etiquetas enviadas a {req.printer_ip}"}

@@ -1,6 +1,7 @@
 import os
 import json
 import socket
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -123,19 +124,24 @@ def api_print(req: PrintReq):
         sgc_print = sgc_version.encode('latin1', errors='replace').decode('latin1')
         v_offset = req.vertical_offset_dots
         h_offset = req.horizontal_offset_dots
+        
+        totallote = req.totallote
+        numinicio = req.numinicio
+        current_date_str = datetime.now().strftime("%d/%m/%Y")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(5.0)
             sock.connect((req.printer_ip, req.printer_port))
             for i in range(1, qty + 1):
-                # Using the ZPL exact format from PythonApplication1.py
+                actual_num = numinicio + i - 1
                 zpl_label = f"""^XA
 ^LH{h_offset},{v_offset}
-^FO115,35^A0N,18,18^FD{nombre_print}^FS
+^FO115,35^A0N,20,20^FD{nombre_print}^FS
 ^FO115,60^BCN,75,Y,N,N^FD{id_producto}^FS
-^FO115,168^A0N,20,20^FD{op_print}^FS
-^FO115,188^A0N,18,18^FD{i}/{qty}^FS
-^FO370,60^A0R,18,18^FD{sgc_print}^FS
+^FO115,168^A0N,22,22^FD{op_print}^FS
+^FO320,168^A0N,20,20^FD{current_date_str}^FS
+^FO115,188^A0N,20,20^FD{actual_num}/{totallote}^FS
+^FO320,188^A0N,20,20^FD{sgc_print}^FS
 ^PQ1,1,1,Y^XZ"""
                 sock.sendall(zpl_label.encode('latin1'))
 
